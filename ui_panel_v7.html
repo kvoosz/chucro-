@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chucro $!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#fff;--surface:#f7f7f5;--border:#111;--text:#0d0d0d;
+  --muted:#6b6b6b;--online:#1a9e5c;--warn:#d97706;--danger:#dc2626;
+  --admin:#7c3aed;--client:#2563eb;
+}
+body{font-family:'DM Sans',sans-serif;background:#f0f0ee;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+
+/* ── KEY SCREEN ── */
+#key-screen{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;width:100%;padding:2rem;
+  background:#f0f0ee;
+  position:fixed;inset:0;z-index:9999;
+  transition:opacity .4s,transform .4s;
+}
+#key-screen.hide{opacity:0;transform:translateY(-16px);pointer-events:none;}
+.ks-brand{font-size:32px;font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:6px;}
+.ks-brand span{color:var(--danger);}
+.ks-sub{font-size:13px;color:var(--muted);margin-bottom:36px;}
+.ks-card{
+  background:#fff;border:2px solid var(--border);border-radius:16px;
+  padding:28px 28px 22px;width:380px;max-width:100%;
+  box-shadow:4px 4px 0 #111;
+}
+.ks-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
+.ks-input-wrap{position:relative;margin-bottom:14px;}
+.ks-input{
+  width:100%;padding:12px 16px;font-size:14px;font-family:'DM Mono',monospace;
+  font-weight:500;border:2px solid var(--border);border-radius:9px;
+  background:#fff;color:var(--text);outline:none;letter-spacing:.08em;
+  transition:border-color .18s,box-shadow .18s;
+}
+.ks-input:focus{border-color:#555;box-shadow:0 0 0 3px rgba(0,0,0,.06);}
+.ks-input.error{border-color:var(--danger);}
+.ks-input.success{border-color:var(--online);}
+.ks-btn{
+  width:100%;padding:12px;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;
+  background:var(--border);color:#fff;border:2px solid var(--border);
+  border-radius:9px;cursor:pointer;letter-spacing:.06em;
+  transition:all .18s;
+}
+.ks-btn:hover{background:#333;}
+.ks-btn:disabled{background:#999;border-color:#999;cursor:not-allowed;}
+.ks-status{
+  margin-top:14px;padding:11px 14px;border-radius:8px;font-size:12px;font-weight:600;
+  display:none;align-items:flex-start;gap:8px;border:1.5px solid;
+  line-height:1.5;
+}
+.ks-status.show{display:flex;}
+.ks-status.info{border-color:#2563eb;background:rgba(37,99,235,.06);color:#1d4ed8;}
+.ks-status.success{border-color:var(--online);background:rgba(26,158,92,.07);color:#166534;}
+.ks-status.error{border-color:var(--danger);background:rgba(220,38,38,.06);color:#991b1b;}
+.ks-status.warn{border-color:var(--warn);background:rgba(217,119,6,.07);color:#92400e;}
+.ks-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+.ks-status-body{flex:1;}
+.ks-status-title{font-weight:700;margin-bottom:2px;}
+.ks-status-detail{font-size:11px;opacity:.85;font-weight:500;}
+.ks-userid{margin-top:14px;font-size:11px;color:var(--muted);text-align:center;}
+.ks-userid span{font-family:'DM Mono',monospace;color:var(--text);font-weight:600;}
+
+/* brute force bar */
+.bf-bar-wrap{margin-top:10px;height:4px;background:#eee;border-radius:2px;overflow:hidden;display:none;}
+.bf-bar-wrap.show{display:block;}
+.bf-bar{height:100%;border-radius:2px;transition:width .3s,background .3s;}
+
+/* ── MAIN UI ── */
+#main-ui{display:none;padding:2rem 1rem;}
+#main-ui.show{display:block;}
+
+#panel-root{min-height:520px;display:flex;align-items:center;justify-content:center;padding:2rem 1rem;background:transparent;position:relative;}
+.hint{font-size:11px;color:#999;text-align:center;margin-bottom:12px;letter-spacing:.04em;}
+.panel-outer{border:2.5px solid var(--border);border-radius:16px;padding:3px;background:var(--border);width:600px;max-width:100%;transition:opacity .28s,transform .28s;cursor:grab;position:relative;}
+.panel-outer.hidden{opacity:0;pointer-events:none;transform:translateY(8px);}
+.panel-outer.dragging{cursor:grabbing;box-shadow:0 8px 32px rgba(0,0,0,.18);}
+.panel{background:var(--bg);border-radius:13px;overflow:hidden;border:1.5px solid var(--border);}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px;border-bottom:1.5px solid var(--border);background:var(--surface);cursor:grab;}
+.panel-tabs{display:flex;gap:5px;flex-wrap:wrap;}
+.tab-btn{background:transparent;border:1.5px solid var(--border);color:var(--muted);border-radius:7px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;letter-spacing:.04em;transition:all .18s;}
+.tab-btn.active{background:var(--border);color:#fff;}
+.tab-btn-ban{border-color:var(--danger)!important;color:var(--danger)!important;}
+.tab-btn-ban.active{background:var(--danger)!important;color:#fff!important;}
+.tab-btn-keys{border-color:var(--admin)!important;color:var(--admin)!important;}
+.tab-btn-keys.active{background:var(--admin)!important;color:#fff!important;}
+.header-tag{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.session-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1.5px solid;letter-spacing:.06em;text-transform:uppercase;}
+.session-admin{color:var(--admin);border-color:var(--admin);background:rgba(124,58,237,.08);}
+.session-client{color:var(--client);border-color:var(--client);background:rgba(37,99,235,.08);}
+.panel-body{padding:16px 18px;}
+
+.section-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:9px;}
+.user-card{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:0;cursor:pointer;transition:background .15s;}
+.user-card:hover{background:#f5f5f5;}
+.user-card.expanded{border-radius:10px 10px 0 0;border-bottom-color:#ddd;}
+.avatar{width:40px;height:40px;border-radius:50%;border:2px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text);flex-shrink:0;}
+.avatar.is-online{border-color:var(--online);}
+.user-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.user-meta{font-size:11px;color:var(--muted);}
+.status-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1.5px solid;letter-spacing:.06em;text-transform:uppercase;flex-shrink:0;}
+.badge-online{color:var(--online);border-color:var(--online);background:rgba(26,158,92,.07);}
+.badge-offline{color:var(--muted);border-color:#ccc;}
+.expand-arrow{font-size:10px;color:var(--muted);transition:transform .2s;flex-shrink:0;margin-left:4px;}
+.expanded-panel{background:#fafaf9;border:1.5px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:13px 15px;margin-bottom:8px;display:none;}
+.expanded-panel.open{display:block;}
+.exp-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.exp-label{font-size:11px;font-weight:600;color:var(--muted);}
+.exp-val{font-size:12px;font-weight:700;color:var(--text);}
+.exp-val.green{color:var(--online);}
+.exp-val.warn{color:var(--warn);}
+.exp-divider{height:1px;background:#e8e8e8;margin:10px 0;}
+.exp-actions{display:flex;gap:7px;margin-top:10px;}
+.exp-btn{flex:1;padding:7px 4px;border-radius:7px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:.04em;border:1.5px solid;transition:all .15s;}
+.btn-ban{background:#fff;border-color:var(--danger);color:var(--danger);}
+.btn-ban:hover{background:var(--danger);color:#fff;}
+.btn-warn-a{background:#fff;border-color:var(--warn);color:var(--warn);}
+.btn-warn-a:hover{background:var(--warn);color:#fff;}
+.btn-revoke{background:#fff;border-color:var(--border);color:var(--text);}
+.btn-revoke:hover{background:var(--text);color:#fff;}
+.divider{height:1px;background:var(--border);opacity:.09;margin:13px 0;}
+.metric-row{display:flex;gap:8px;}
+.metric-card{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;}
+.metric-label{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;}
+.metric-val{font-size:22px;font-weight:700;color:var(--text);}
+.no-users{text-align:center;padding:18px 0;font-size:12px;color:var(--muted);}
+
+/* CLIENT */
+.client-layout{display:flex;gap:13px;}
+.list-col{flex:1;min-width:0;}
+.list-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
+.scroll-list{height:200px;overflow-y:auto;border:1.5px solid var(--border);border-radius:9px;background:var(--bg);}
+.scroll-list::-webkit-scrollbar{width:4px;}
+.scroll-list::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px;}
+.list-item{padding:9px 11px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:1px solid #ebebeb;display:flex;align-items:center;gap:8px;transition:all .13s;user-select:none;}
+.list-item:last-child{border-bottom:none;}
+.list-item:hover{background:var(--surface);color:var(--text);}
+.list-item.selected{background:#f0f0f0;color:var(--text);font-weight:600;}
+.item-check{width:14px;height:14px;border-radius:3px;border:1.5px solid #bbb;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff;transition:all .13s;}
+.list-item.selected .item-check{background:var(--border);border-color:var(--border);}
+.check-icon{width:8px;height:8px;display:none;}
+.list-item.selected .check-icon{display:block;}
+.right-col{display:flex;flex-direction:column;gap:9px;width:116px;flex-shrink:0;}
+.amount-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;}
+.amount-input{background:var(--bg)!important;border:1.5px solid var(--border)!important;border-radius:7px!important;color:var(--text)!important;font-size:13px!important;font-family:'DM Sans',sans-serif!important;font-weight:600!important;padding:7px 8px!important;width:100%!important;outline:none!important;text-align:center;}
+.amount-input:disabled{background:var(--surface)!important;color:#bbb!important;}
+.action-row{display:flex;gap:6px;}
+.btn-get{flex:1;background:var(--border);border:1.5px solid var(--border);color:#fff;border-radius:7px;padding:7px 4px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;letter-spacing:.05em;transition:all .18s;}
+.btn-get.stop{background:#fff;border-color:var(--border);color:var(--text);}
+.btn-inf{flex:1;background:#fff;border:1.5px solid var(--border);color:var(--text);border-radius:7px;padding:7px 4px;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all .18s;}
+.btn-inf.active{background:var(--border);border-color:var(--border);color:#fff;}
+.selection-info{font-size:10px;color:var(--muted);text-align:center;min-height:24px;display:flex;align-items:center;justify-content:center;font-weight:500;}
+.selection-info strong{color:var(--text);font-weight:700;}
+.log-area{margin-top:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--muted);min-height:54px;max-height:54px;overflow:hidden;display:flex;flex-direction:column;gap:2px;}
+.log-entry strong{color:var(--text);font-weight:700;}
+
+/* BANLANDIA */
+.banlandia-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.banlandia-title{font-size:13px;font-weight:700;color:var(--danger);letter-spacing:.04em;}
+.ban-count-badge{background:rgba(220,38,38,.1);border:1.5px solid var(--danger);color:var(--danger);border-radius:20px;font-size:10px;font-weight:700;padding:2px 9px;}
+.ban-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow-y:auto;}
+.ban-list::-webkit-scrollbar{width:4px;}
+.ban-list::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px;}
+.ban-card{background:var(--bg);border:1.5px solid #e5e5e5;border-left:3px solid var(--danger);border-radius:9px;padding:11px 13px;}
+.ban-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.ban-name{font-size:13px;font-weight:700;color:var(--text);}
+.ban-duration{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1.5px solid;}
+.dur-permanent{color:var(--danger);border-color:var(--danger);background:rgba(220,38,38,.07);}
+.dur-temp{color:var(--warn);border-color:var(--warn);background:rgba(217,119,6,.07);}
+.ban-meta{font-size:11px;color:var(--muted);margin-bottom:5px;}
+.ban-reason{font-size:11px;color:var(--text);background:var(--surface);border-radius:5px;padding:5px 8px;border-left:2px solid #ddd;line-height:1.5;}
+.ban-actions{display:flex;gap:6px;margin-top:8px;}
+.btn-unban{flex:1;background:#fff;border:1.5px solid var(--online);color:var(--online);border-radius:6px;padding:5px 8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:.04em;transition:all .15s;}
+.btn-unban:hover{background:var(--online);color:#fff;}
+.empty-ban{text-align:center;padding:24px 0;color:var(--muted);font-size:12px;}
+
+/* KEYS TAB */
+.keys-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.keys-title{font-size:13px;font-weight:700;color:var(--admin);}
+.btn-new-key{background:var(--admin);color:#fff;border:1.5px solid var(--admin);border-radius:7px;padding:5px 13px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:.04em;transition:all .15s;}
+.btn-new-key:hover{opacity:.88;}
+.keys-list{display:flex;flex-direction:column;gap:7px;max-height:260px;overflow-y:auto;}
+.keys-list::-webkit-scrollbar{width:4px;}
+.keys-list::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px;}
+.key-card{background:var(--bg);border:1.5px solid #e5e5e5;border-left:3px solid var(--admin);border-radius:9px;padding:10px 13px;}
+.key-card.expired{border-left-color:#ccc;opacity:.6;}
+.key-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.key-code{font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--text);letter-spacing:.06em;}
+.key-level{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1.5px solid;}
+.level-admin{color:var(--admin);border-color:var(--admin);background:rgba(124,58,237,.07);}
+.level-client{color:var(--client);border-color:var(--client);background:rgba(37,99,235,.07);}
+.key-meta{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px;margin-bottom:4px;}
+.key-meta span{display:flex;align-items:center;gap:3px;}
+.key-bound{font-size:11px;color:var(--online);font-weight:600;}
+.key-bound.unbound{color:#bbb;}
+.key-actions{display:flex;gap:6px;margin-top:7px;}
+.btn-copy-key{flex:1;background:#fff;border:1.5px solid #ddd;color:var(--muted);border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;}
+.btn-copy-key:hover{border-color:var(--border);color:var(--text);}
+.btn-revoke-key{background:#fff;border:1.5px solid var(--danger);color:var(--danger);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;}
+.btn-revoke-key:hover{background:var(--danger);color:#fff;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:999;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:#fff;border:2px solid var(--border);border-radius:14px;padding:22px 22px 18px;width:340px;max-width:90vw;position:relative;}
+.modal-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.modal-sub{font-size:11px;color:var(--muted);margin-bottom:14px;}
+.modal-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;}
+.modal-textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 11px;font-size:12px;font-family:'DM Sans',sans-serif;resize:none;outline:none;color:var(--text);background:#fff;line-height:1.5;}
+.modal-textarea:focus{border-color:#555;}
+.modal-select{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;color:var(--text);background:#fff;margin-bottom:14px;cursor:pointer;}
+.modal-input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;font-family:'DM Mono',monospace;font-weight:500;outline:none;color:var(--text);background:#fff;letter-spacing:.06em;margin-bottom:10px;}
+.modal-input:focus{border-color:#555;}
+.modal-footer{display:flex;gap:8px;margin-top:14px;}
+.modal-btn{flex:1;padding:8px 10px;border-radius:8px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;border:1.5px solid;transition:all .15s;letter-spacing:.04em;}
+.modal-cancel{background:#fff;border-color:#ddd;color:var(--muted);}
+.modal-cancel:hover{border-color:var(--border);color:var(--text);}
+.modal-confirm-ban{background:var(--danger);border-color:var(--danger);color:#fff;}
+.modal-confirm-warn{background:var(--warn);border-color:var(--warn);color:#fff;}
+.modal-confirm-revoke{background:var(--border);border-color:var(--border);color:#fff;}
+.modal-confirm-key{background:var(--admin);border-color:var(--admin);color:#fff;}
+.modal-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:16px;cursor:pointer;color:var(--muted);line-height:1;}
+.revoke-info{background:var(--surface);border:1.5px solid #ddd;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);line-height:1.6;margin-bottom:14px;}
+.revoke-info strong{font-weight:700;}
+.generated-key-box{background:var(--surface);border:1.5px solid var(--admin);border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--admin);text-align:center;letter-spacing:.1em;margin-bottom:10px;cursor:pointer;user-select:all;}
+
+.logout-btn{
+  background:#fff;border:1.5px solid #ddd;color:var(--muted);
+  border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;
+  font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;
+  letter-spacing:.04em;
+}
+.logout-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+/* TIER BADGES */
+.level-normal{color:#6b7280;border-color:#6b7280;background:rgba(107,114,128,.07);}
+.level-semi-premium{color:#f59e0b;border-color:#f59e0b;background:rgba(245,158,11,.07);}
+.level-premium{color:#10b981;border-color:#10b981;background:rgba(16,185,129,.07);}
+.tier-info{font-size:10px;color:var(--muted);margin-top:3px;font-weight:500;}
+.tier-info.warn{color:var(--warn);}
+.tier-info.danger{color:var(--danger);}
+
+/* LOCKED BUTTON ANIMATION */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+.btn-locked {
+  animation: shake 0.4s ease;
+  background: rgba(239,68,68,0.15) !important;
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+  pointer-events: none;
+}
+.btn-locked::after {
+  content: ' bloqueado';
+  font-size: 9px;
+  opacity: 0.8;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ KEY SCREEN ══════════ -->
+<div id="key-screen">
+  <div class="ks-brand">Chucro <span>$!</span></div>
+  <div class="ks-sub" id="ks-greeting">hello, welcome to Chucro $!</div>
+
+  <div class="ks-card">
+    <div class="ks-label">put the key</div>
+    <div class="ks-input-wrap">
+      <input class="ks-input" id="ks-input" type="text" placeholder="XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" oninput="onKeyInput()" onkeydown="if(event.key==='Enter')checkKey()">
+    </div>
+
+    <div class="bf-bar-wrap" id="bf-bar-wrap">
+      <div class="bf-bar" id="bf-bar" style="width:0%;background:var(--danger);"></div>
+    </div>
+
+    <div class="ks-status" id="ks-status">
+      <span class="ks-icon" id="ks-status-icon"></span>
+      <div class="ks-status-body">
+        <div class="ks-status-title" id="ks-status-title"></div>
+        <div class="ks-status-detail" id="ks-status-detail"></div>
+      </div>
+    </div>
+
+    <button class="ks-btn" id="ks-btn" onclick="checkKey()" style="margin-top:14px;">Verificar chave</button>
+    <div class="ks-userid">Seu Roblox ID: <span id="display-userid"></span></div>
+  </div>
+</div>
+
+<!-- ══════════ MAIN UI ══════════ -->
+<div id="main-ui">
+<div id="panel-root">
+  <div id="drag-wrapper">
+    <p class="hint">F1 para alternar · arraste para mover</p>
+    <div class="panel-outer" id="panel-outer">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-tabs" id="panel-tabs">
+            <!-- tabs injected by JS -->
+          </div>
+          <div class="header-right">
+            <span class="session-badge" id="session-badge"></span>
+            <span class="header-tag" id="header-tag">Dashboard</span>
+            <button class="logout-btn" onclick="logout()">Sair</button>
+          </div>
+        </div>
+        <div class="panel-body" id="panel-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="modal-ban">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-ban')">✕</button>
+    <div class="modal-title" id="ban-modal-title">Banir usuário</div>
+    <div class="modal-sub">Descreva o motivo e defina a duração.</div>
+    <div class="modal-label">Motivo do ban</div>
+    <textarea class="modal-textarea" id="ban-reason-input" rows="3" placeholder="Ex: uso de cheats..."></textarea>
+    <div class="modal-label" style="margin-top:12px;">Duração</div>
+    <select class="modal-select" id="ban-duration-select">
+      <option value="permanent">Permanente</option>
+      <option value="month">1 Mês</option>
+      <option value="week">1 Semana</option>
+    </select>
+    <div class="modal-footer">
+      <button class="modal-btn modal-cancel" onclick="closeModal('modal-ban')">Cancelar</button>
+      <button class="modal-btn modal-confirm-ban" onclick="confirmBan()">Aplicar Ban</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-warn">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-warn')">✕</button>
+    <div class="modal-title">Enviar aviso</div>
+    <div class="modal-sub" id="warn-modal-sub"></div>
+    <div class="modal-label">Mensagem do aviso</div>
+    <textarea class="modal-textarea" id="warn-msg-input" rows="4" placeholder="Ex: Atenção — comportamento monitorado..."></textarea>
+    <div class="modal-footer">
+      <button class="modal-btn modal-cancel" onclick="closeModal('modal-warn')">Cancelar</button>
+      <button class="modal-btn modal-confirm-warn" onclick="confirmWarn()">Enviar Aviso</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-revoke">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-revoke')">✕</button>
+    <div class="modal-title">Revogar acesso</div>
+    <div class="modal-sub" id="revoke-modal-sub"></div>
+    <div class="revoke-info">Ao revogar, a chave <strong id="revoke-key-display"></strong> será invalidada. Esta ação <strong>não é um ban</strong>.</div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-cancel" onclick="closeModal('modal-revoke')">Cancelar</button>
+      <button class="modal-btn modal-confirm-revoke" onclick="confirmRevoke()">Revogar chave</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-newkey">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-newkey')">✕</button>
+    <div class="modal-title">Criar nova chave</div>
+    <div class="modal-sub">A chave será gerada automaticamente ou defina uma personalizada.</div>
+    <div class="modal-label">Código da chave (opcional)</div>
+    <input class="modal-input" id="newkey-code" type="text" placeholder="deixe vazio para gerar automaticamente">
+    <div class="modal-label">Nível de acesso</div>
+    <select class="modal-select" id="newkey-level">
+      <option value="client">Client</option>
+      <option value="admin">Admin</option>
+    </select>
+    <div class="modal-label">Plano / Tier</div>
+    <select class="modal-select" id="newkey-tier">
+      <option value="normal">Normal (30R$) — Get básico, 15/item, cooldown 3:45</option>
+      <option value="semi-premium">Semi-Premium (45R$) — Get avançado, 100/item, cooldown 15min</option>
+      <option value="premium">Premium (65R$) — Get + Infinite, sem limites</option>
+    </select>
+    <div class="modal-label">Duração</div>
+    <select class="modal-select" id="newkey-duration">
+      <option value="7">7 dias</option>
+      <option value="14">14 dias</option>
+      <option value="30" selected>30 dias</option>
+      <option value="60">60 dias</option>
+      <option value="90">90 dias</option>
+      <option value="365">1 ano</option>
+      <option value="0">Permanente</option>
+    </select>
+    <div id="newkey-result" style="display:none;">
+      <div class="modal-label">Chave gerada — clique para copiar</div>
+      <div class="generated-key-box" id="newkey-result-box" onclick="copyGeneratedKey()"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn modal-cancel" onclick="closeModal('modal-newkey')">Fechar</button>
+      <button class="modal-btn modal-confirm-key" id="newkey-btn" onclick="createKey()">Gerar chave</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// SISTEMA DE CHAVES — "BANCO DE DADOS" local
+// Em produção real isso ficaria no GitHub Gist/servidor
+// ══════════════════════════════════════════
+
+const now = () => new Date();
+const addDays = (d, n) => { const r = new Date(d); r.setDate(r.getDate()+n); return r; };
+const fmtDate = d => d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+const diffDays = (a,b) => Math.ceil((a-b)/(1000*60*60*24));
+
+// Simula o ID do Roblox do usuário atual (em produção vem do LocalScript)
+// Para teste, geramos um ID aleatório que persiste na sessão
+let MY_ROBLOX_ID = localStorage.getItem('sim_roblox_id');
+if (!MY_ROBLOX_ID) {
+  MY_ROBLOX_ID = String(Math.floor(1000000000 + Math.random()*8999999999));
+  localStorage.setItem('sim_roblox_id', MY_ROBLOX_ID);
+}
+document.getElementById('display-userid').textContent = MY_ROBLOX_ID;
+
+// Base de dados de chaves (localStorage simulando servidor)
+function loadKeys() {
+  try { return JSON.parse(localStorage.getItem('chucro_keys') || '[]'); } catch { return []; }
+}
+function saveKeys(keys) {
+  localStorage.setItem('chucro_keys', JSON.stringify(keys));
+}
+function loadBoundKeys() {
+  try { return JSON.parse(localStorage.getItem('chucro_bound') || '{}'); } catch { return {}; }
+}
+function saveBoundKeys(b) {
+  localStorage.setItem('chucro_bound', JSON.stringify(b));
+}
+
+// Inicializa com chaves padrão se vazio
+// ══════════════════════════════════════════
+// TIER SYSTEM - Limites por plano
+// ══════════════════════════════════════════
+// Normal (30R$): 15 items a cada 3:45 min, apenas Get
+// Semi-Premium (45R$): Get sem limite de tempo, max 25-70 por pedido, 100 total por item a cada 15 min
+// Premium (65R$): Get + Infinite, sem restrições
+const TIER_CONFIG = {
+  normal: {
+    name: 'Normal',
+    price: 30,
+    canInfinite: false,
+    maxPerRequest: 15,
+    maxPerItem: 15, // 15 de cada item
+    cooldownMs: 3 * 60 * 1000 + 45 * 1000, // 3 minutos e 45 segundos
+    color: '#6b7280'
+  },
+  'semi-premium': {
+    name: 'Semi-Premium',
+    price: 45,
+    canInfinite: false,
+    maxPerRequest: 70, // pode escolher entre 25-70
+    maxPerItem: 100, // 100 de cada item
+    cooldownMs: 15 * 60 * 1000, // 15 minutos
+    color: '#f59e0b'
+  },
+  premium: {
+    name: 'Premium',
+    price: 65,
+    canInfinite: true,
+    maxPerRequest: 999,
+    maxPerItem: 999,
+    cooldownMs: 0,
+    color: '#10b981'
+  },
+  admin: {
+    name: 'Admin',
+    price: 0,
+    canInfinite: true,
+    maxPerRequest: 999,
+    maxPerItem: 999,
+    cooldownMs: 0,
+    color: '#7c3aed'
+  }
+};
+
+// Tracking de uso por tier
+function loadUsageTracking() {
+  try { return JSON.parse(localStorage.getItem('chucro_usage') || '{}'); } catch { return {}; }
+}
+function saveUsageTracking(u) {
+  localStorage.setItem('chucro_usage', JSON.stringify(u));
+}
+
+// Limpa chaves expiradas automaticamente
+function cleanupExpiredKeys() {
+  const keys = loadKeys();
+  const bound = loadBoundKeys();
+  const currentTime = now();
+  let cleaned = 0;
+  
+  const validKeys = keys.filter(k => {
+    // Mantém chaves permanentes
+    if (k.permanent) return true;
+    // Mantém chaves não expiradas
+    if (k.expires && new Date(k.expires) > currentTime) return true;
+    // Remove chave expirada
+    delete bound[k.code];
+    cleaned++;
+    return false;
+  });
+  
+  if (cleaned > 0) {
+    saveKeys(validKeys);
+    saveBoundKeys(bound);
+    console.log(`[Chucro] ${cleaned} chave(s) expirada(s) removida(s) automaticamente.`);
+  }
+  return cleaned;
+}
+
+function initDefaultKeys() {
+  // Limpa chaves expiradas primeiro
+  cleanupExpiredKeys();
+  
+  const keys = loadKeys();
+  if (!keys.find(k => k.code === 'chucro')) {
+    const base = [
+      { code:'chucro', level:'admin', tier:'admin', days:0, permanent:true,
+        created: now().toISOString(), expires: null, active:true, revokedAt:null },
+      { code:'NORMAL-DEMO', level:'client', tier:'normal', days:30,
+        created: now().toISOString(),
+        expires: addDays(now(),30).toISOString(), active:true, revokedAt:null },
+      { code:'SEMI-DEMO', level:'client', tier:'semi-premium', days:30,
+        created: now().toISOString(),
+        expires: addDays(now(),30).toISOString(), active:true, revokedAt:null },
+      { code:'PREMIUM-DEMO', level:'client', tier:'premium', days:30,
+        created: now().toISOString(),
+        expires: addDays(now(),30).toISOString(), active:true, revokedAt:null },
+    ];
+    saveKeys([...keys, ...base]);
+  }
+}
+initDefaultKeys();
+
+// Limpa chaves expiradas a cada 1 minuto
+setInterval(cleanupExpiredKeys, 60000);
+
+// Anti brute force
+let bfAttempts = 0;
+let bfLocked = false;
+let bfLockUntil = 0;
+const BF_MAX = 5;
+const BF_LOCK_MS = 30000;
+
+// Sessão atual
+let sessionLevel = null;
+let sessionKey = null;
+
+// ══════════════════════════════════════════
+// KEY SCREEN LOGIC
+// ══════════════════════════════════════════
+
+function onKeyInput() {
+  const inp = document.getElementById('ks-input');
+  inp.classList.remove('error','success');
+  setStatus(null);
+}
+
+function setStatus(type, title, detail) {
+  const el = document.getElementById('ks-status');
+  const icn = document.getElementById('ks-status-icon');
+  const ttl = document.getElementById('ks-status-title');
+  const dtl = document.getElementById('ks-status-detail');
+  if (!type) { el.className='ks-status'; return; }
+  el.className = `ks-status show ${type}`;
+  const icons = {success:'✓',error:'✕',warn:'⚠',info:'ℹ'};
+  icn.textContent = icons[type]||'';
+  ttl.textContent = title;
+  dtl.textContent = detail||'';
+}
+
+function updateBfBar() {
+  const wrap = document.getElementById('bf-bar-wrap');
+  const bar = document.getElementById('bf-bar');
+  if (bfAttempts === 0) { wrap.classList.remove('show'); return; }
+  wrap.classList.add('show');
+  const pct = Math.min(100, (bfAttempts/BF_MAX)*100);
+  bar.style.width = pct+'%';
+  bar.style.background = pct >= 100 ? 'var(--danger)' : pct >= 60 ? 'var(--warn)' : 'var(--admin)';
+}
+
+function checkKey() {
+  const btn = document.getElementById('ks-btn');
+  const inp = document.getElementById('ks-input');
+  const code = inp.value.trim().toLowerCase();
+
+  if (!code) { setStatus('warn','Chave vazia','Digite sua chave de acesso.'); return; }
+
+  // brute force lock?
+  if (bfLocked && Date.now() < bfLockUntil) {
+    const secs = Math.ceil((bfLockUntil - Date.now())/1000);
+    setStatus('error','Bloqueado temporariamente',`Muitas tentativas. Tente novamente em ${secs}s.`);
+    inp.classList.add('error');
+    return;
+  }
+
+  const keys = loadKeys();
+  const bound = loadBoundKeys();
+
+  // normaliza busca
+  const found = keys.find(k => k.code.toLowerCase() === code);
+
+  if (!found) {
+    bfAttempts++;
+    updateBfBar();
+    if (bfAttempts >= BF_MAX) {
+      bfLocked = true;
+      bfLockUntil = Date.now() + BF_LOCK_MS;
+      bfAttempts = 0;
+      updateBfBar();
+      setStatus('error','Bloqueado por 30 segundos','Muitas tentativas incorretas. Force brute detectado.');
+      inp.classList.add('error');
+      setTimeout(()=>{ bfLocked=false; updateBfBar(); setStatus(null); inp.classList.remove('error'); }, BF_LOCK_MS);
+    } else {
+      setStatus('error','Chave inválida',`Chave não encontrada. (${bfAttempts}/${BF_MAX} tentativas)`);
+      inp.classList.add('error');
+    }
+    return;
+  }
+
+  // revogada?
+  if (found.revokedAt) {
+    setStatus('error','Chave revogada',`Esta chave foi revogada em ${fmtDate(new Date(found.revokedAt))}.`);
+    inp.classList.add('error');
+    bfAttempts++;
+    updateBfBar();
+    return;
+  }
+
+  // expirada?
+  if (!found.permanent && found.expires && new Date(found.expires) < now()) {
+    setStatus('error','Chave expirada',`Esta chave expirou em ${fmtDate(new Date(found.expires))}.`);
+    inp.classList.add('error');
+    return;
+  }
+
+  // bound a outro ID?
+  const boundId = bound[found.code];
+  if (boundId && boundId !== MY_ROBLOX_ID) {
+    setStatus('error','Chave já em uso','Esta chave já está vinculada a outro usuário Roblox. Acesso negado.');
+    inp.classList.add('error');
+    // mesmo com brute force não vai funcionar — a key é do outro ID
+    return;
+  }
+
+  // ✅ Válida! Vincula ao ID atual se ainda não vinculada
+  if (!boundId) {
+    bound[found.code] = MY_ROBLOX_ID;
+    saveBoundKeys(bound);
+    // salva last used
+    const idx = keys.findIndex(k=>k.code===found.code);
+    keys[idx].lastUsedBy = MY_ROBLOX_ID;
+    keys[idx].lastUsedAt = now().toISOString();
+    saveKeys(keys);
+  }
+
+  // reset brute force ao ter sucesso
+  bfAttempts = 0;
+  updateBfBar();
+
+  // mostra info antes de entrar
+  let daysLeft = found.permanent ? null : diffDays(new Date(found.expires), now());
+  let expStr = found.permanent ? 'Permanente — nunca expira' : `Expira em ${daysLeft} dia${daysLeft!==1?'s':''} (${fmtDate(new Date(found.expires))})`;
+  let isNew = !boundId;
+
+  inp.classList.add('success');
+  setStatus('success',
+    `${isNew?'Chave ativada! ':''}Bem-vindo, ${found.level === 'admin' ? '🔑 Admin' : '👤 Client'}`,
+    expStr
+  );
+
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+
+  setTimeout(()=>{
+    sessionLevel = found.level;
+    sessionKey = found;
+    launchUI();
+  }, 1200);
+}
+
+function launchUI() {
+  // Limpa estado anterior ao entrar com nova conta
+  selectedItems.clear();
+  isInfinite = false;
+  isRunning = false;
+  if (infiniteInterval) clearInterval(infiniteInterval);
+  
+  document.getElementById('key-screen').classList.add('hide');
+  document.getElementById('main-ui').classList.add('show');
+  setTimeout(()=>{ document.getElementById('key-screen').style.display='none'; }, 400);
+  buildTabs();
+  renderBody();
+}
+
+function logout() {
+  sessionLevel = null;
+  sessionKey = null;
+  selectedItems.clear();
+  isInfinite = false;
+  isRunning = false;
+  if (infiniteInterval) clearInterval(infiniteInterval);
+  document.getElementById('key-screen').style.display='flex';
+  document.getElementById('key-screen').classList.remove('hide');
+  document.getElementById('main-ui').classList.remove('show');
+  document.getElementById('ks-input').value='';
+  document.getElementById('ks-btn').disabled=false;
+  document.getElementById('ks-btn').textContent='Verificar chave';
+  setStatus(null);
+  document.getElementById('ks-input').classList.remove('error','success');
+}
+
+// ══════════════════════════════════════════
+// MAIN PANEL LOGIC
+// ══════════════════════════════════════════
+
+let currentTab = 'admin';
+let selectedItems = new Set();
+let isInfinite = false, isRunning = false, infiniteInterval = null;
+
+let expandedUser = null;
+let activeModalUser = null;
+
+const items = [
+  {id:1,name:'Sword of Dawn'},{id:2,name:'Shadow Cloak'},
+  {id:3,name:'Mana Crystal'},{id:4,name:'Iron Shield'},
+  {id:5,name:'Elixir of Speed'},{id:6,name:'Fire Staff'},
+  {id:7,name:'Dragon Scale'},{id:8,name:'Void Dagger'},
+];
+
+let allUsers = [
+  {id:1,initials:'LM',name:'Lucas Martins',lastSeen:'Agora mesmo',online:true,key:'KEY-4F9A-2X',keyExpires:'12d 4h',keyStatus:'active'},
+  {id:2,initials:'AS',name:'Ana Silva',lastSeen:'há 14 min',online:false,key:'KEY-8C3B-7Z',keyExpires:'2d 1h',keyStatus:'expiring'},
+];
+
+let bannedIds = new Set();
+let bannedList = [
+  {id:99,name:'Pedro Hack',date:'23 Abr 2025',duration:'permanent',durLabel:'Permanente',reason:'Uso de cheats detectado. Injeção de DLL identificada.'},
+  {id:98,name:'Xpto Griefer',date:'20 Abr 2025',duration:'week',durLabel:'1 Semana',reason:'Comportamento abusivo. Múltiplos reports confirmados.'},
+];
+
+function buildTabs() {
+  const isAdmin = sessionLevel === 'admin';
+  const tabs = document.getElementById('panel-tabs');
+  const badge = document.getElementById('session-badge');
+  badge.textContent = isAdmin ? 'ADMIN' : 'CLIENT';
+  badge.className = `session-badge session-${sessionLevel}`;
+
+  if (isAdmin) {
+    tabs.innerHTML = `
+      <button class="tab-btn active" onclick="switchTab('admin')">Admin</button>
+      <button class="tab-btn" onclick="switchTab('client')">Client</button>
+      <button class="tab-btn tab-btn-ban" onclick="switchTab('banlandia')">BanLandia</button>
+      <button class="tab-btn tab-btn-keys" onclick="switchTab('keys')">🔑 Keys</button>
+    `;
+    currentTab = 'admin';
+  } else {
+    tabs.innerHTML = `
+      <button class="tab-btn active" onclick="switchTab('client')">Client</button>
+    `;
+    currentTab = 'client';
+    document.getElementById('header-tag').textContent = 'Items';
+  }
+}
+
+function switchTab(tab) {
+  if (sessionLevel !== 'admin' && tab !== 'client') return;
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const tags = {admin:'Dashboard',client:'Items',banlandia:'⚑ BanLandia',keys:'🔑 Keys'};
+  document.getElementById('header-tag').textContent = tags[tab];
+  renderBody();
+}
+
+function toggleExpand(uid) { expandedUser = expandedUser===uid?null:uid; renderBody(); }
+
+function openModal(type, uid) {
+  const user = allUsers.find(u=>u.id===uid);
+  if (!user) return;
+  activeModalUser = user;
+  if (type==='ban') {
+    document.getElementById('ban-modal-title').textContent = `Banir — ${user.name}`;
+    document.getElementById('ban-reason-input').value='';
+    document.getElementById('ban-reason-input').style.borderColor='';
+    document.getElementById('ban-duration-select').value='permanent';
+    document.getElementById('modal-ban').classList.add('open');
+  } else if (type==='warn') {
+    document.getElementById('warn-modal-sub').textContent=`Aviso para ${user.name}`;
+    document.getElementById('warn-msg-input').value='';
+    document.getElementById('warn-msg-input').style.borderColor='';
+    document.getElementById('modal-warn').classList.add('open');
+  } else if (type==='revoke') {
+    document.getElementById('revoke-modal-sub').textContent=`Revogar chave de ${user.name}`;
+    document.getElementById('revoke-key-display').textContent=user.key;
+    document.getElementById('modal-revoke').classList.add('open');
+  }
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function confirmBan() {
+  const reason = document.getElementById('ban-reason-input').value.trim();
+  const dur = document.getElementById('ban-duration-select').value;
+  if (!reason) { document.getElementById('ban-reason-input').style.borderColor='var(--danger)'; return; }
+  const durLabels={permanent:'Permanente',month:'1 Mês',week:'1 Semana'};
+  const months=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const d=now();
+  const dateStr=`${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  bannedList.unshift({id:activeModalUser.id,name:activeModalUser.name,date:dateStr,duration:dur,durLabel:durLabels[dur],reason});
+  bannedIds.add(activeModalUser.id);
+  if (expandedUser===activeModalUser.id) expandedUser=null;
+  closeModal('modal-ban');
+  switchTabDirect('banlandia');
+}
+
+function confirmWarn() {
+  const msg=document.getElementById('warn-msg-input').value.trim();
+  if (!msg) { document.getElementById('warn-msg-input').style.borderColor='var(--danger)'; return; }
+  closeModal('modal-warn');
+  alert(`Aviso enviado para ${activeModalUser.name}:\n"${msg}"`);
+}
+function confirmRevoke() {
+  if (!activeModalUser) return;
+  const userKey = activeModalUser.key;
+  const keys = loadKeys();
+  const keyIndex = keys.findIndex(k => k.code === userKey);
+  if (keyIndex >= 0) {
+    keys[keyIndex].revokedAt = now().toISOString();
+    keys[keyIndex].expires = now().toISOString(); // zera o tempo
+    saveKeys(keys);
+  }
+  // Remove binding
+  const bound = loadBoundKeys();
+  delete bound[userKey];
+  saveBoundKeys(bound);
+  // Update user in allUsers
+  const userIndex = allUsers.findIndex(u => u.id === activeModalUser.id);
+  if (userIndex >= 0) {
+    allUsers[userIndex].key = '—';
+    allUsers[userIndex].keyExpires = 'Revogada';
+    allUsers[userIndex].keyStatus = 'revoked';
+  }
+  closeModal('modal-revoke');
+  renderBody();
+}
+function unban(id) { bannedList=bannedList.filter(b=>b.id!==id); bannedIds.delete(id); renderBody(); }
+
+function switchTabDirect(tab) {
+  currentTab=tab;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    const map={admin:0,client:1,banlandia:2,keys:3};
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(tab) || (tab==='banlandia'&&b.textContent.includes('BanLandia')) || (tab==='keys'&&b.textContent.includes('Key')));
+  });
+  const tags={admin:'Dashboard',client:'Items',banlandia:'⚑ BanLandia',keys:'🔑 Keys'};
+  document.getElementById('header-tag').textContent=tags[tab];
+  renderBody();
+}
+
+// ── RENDER FUNCTIONS ──
+
+function renderAdmin() {
+  const users=allUsers.filter(u=>!bannedIds.has(u.id));
+  const on=users.filter(u=>u.online).length;
+  const off=users.filter(u=>!u.online).length;
+  return `
+    <p class="section-label">Último acesso</p>
+    ${users.length===0?'<div class="no-users">Nenhum usuário ativo.</div>':
+      users.map(u=>`
+        <div class="user-card${expandedUser===u.id?' expanded':''}" onclick="toggleExpand(${u.id})" style="margin-bottom:0;">
+          <div class="avatar${u.online?' is-online':''}">${u.initials}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="user-name">${u.name}</div>
+            <div class="user-meta">Último acesso: ${u.lastSeen}</div>
+          </div>
+          <span class="status-badge ${u.online?'badge-online':'badge-offline'}">${u.online?'Online':'Offline'}</span>
+          <span class="expand-arrow" style="transform:${expandedUser===u.id?'rotate(180deg)':'rotate(0)'}">▼</span>
+        </div>
+        <div class="expanded-panel${expandedUser===u.id?' open':''}">
+          <div class="exp-row"><span class="exp-label">Chave ativa</span><span class="exp-val" style="font-family:'DM Mono',monospace;font-size:11px;">${u.key}</span></div>
+          <div class="exp-row"><span class="exp-label">Expira em</span><span class="exp-val ${u.keyStatus==='expiring'?'warn':'green'}">${u.keyExpires}</span></div>
+          <div class="exp-row"><span class="exp-label">Status</span><span class="exp-val ${u.keyStatus==='active'?'green':'warn'}">${u.keyStatus==='active'?'Ativa':'Expirando'}</span></div>
+          <div class="exp-divider"></div>
+          <div class="exp-actions">
+            <button class="exp-btn btn-ban" onclick="event.stopPropagation();openModal('ban',${u.id})">Ban</button>
+            <button class="exp-btn btn-warn-a" onclick="event.stopPropagation();openModal('warn',${u.id})">Aviso</button>
+            <button class="exp-btn btn-revoke" onclick="event.stopPropagation();openModal('revoke',${u.id})">Revogar</button>
+          </div>
+        </div>
+      `).join('')}
+    <div class="divider"></div>
+    <p class="section-label">Resumo</p>
+    <div class="metric-row">
+      <div class="metric-card"><div class="metric-label">Sessões</div><div class="metric-val">${users.length}</div></div>
+      <div class="metric-card"><div class="metric-label">Online</div><div class="metric-val" style="color:var(--online)">${on}</div></div>
+      <div class="metric-card"><div class="metric-label">Offline</div><div class="metric-val" style="color:var(--muted)">${off}</div></div>
+    </div>
+  `;
+}
+
+function renderBanlandia() {
+  return `
+    <div class="banlandia-header">
+      <span class="banlandia-title">⚑ BanLandia</span>
+      <span class="ban-count-badge">${bannedList.length} banido${bannedList.length!==1?'s':''}</span>
+    </div>
+    <div class="ban-list">
+      ${bannedList.length===0?'<div class="empty-ban">Nenhum banido. Por enquanto.</div>':
+        bannedList.map(b=>`
+          <div class="ban-card">
+            <div class="ban-card-header">
+              <span class="ban-name">${b.name}</span>
+              <span class="ban-duration ${b.duration==='permanent'?'dur-permanent':'dur-temp'}">${b.durLabel}</span>
+            </div>
+            <div class="ban-meta">Banido em: ${b.date}</div>
+            <div class="ban-reason">${b.reason}</div>
+            <div class="ban-actions">
+              <button class="btn-unban" onclick="unban(${b.id})">Remover ban</button>
+            </div>
+          </div>
+        `).join('')}
+    </div>
+  `;
+}
+
+function renderClient() {
+  const selArr=[...selectedItems];
+  const selText=selArr.length===0?'Nenhum selecionado':`<strong>${selArr.length}</strong> item${selArr.length>1?'s':''} selecionado${selArr.length>1?'s':''}`;
+  
+  // Get current tier config
+  const tier = sessionKey?.tier || sessionKey?.level || 'normal';
+  const tierConfig = TIER_CONFIG[tier] || TIER_CONFIG.normal;
+  const canInfinite = tierConfig.canInfinite;
+  const maxPerRequest = tierConfig.maxPerRequest;
+  
+  // Check cooldown status
+  const usage = loadUsageTracking();
+  const userUsage = usage[MY_ROBLOX_ID] || {};
+  const lastUse = userUsage.lastUseTime || 0;
+  const cooldownLeft = tierConfig.cooldownMs > 0 ? Math.max(0, (lastUse + tierConfig.cooldownMs) - Date.now()) : 0;
+  const onCooldown = cooldownLeft > 0;
+  const cooldownSecs = Math.ceil(cooldownLeft / 1000);
+  const cooldownDisplay = cooldownSecs >= 60 
+    ? `${Math.floor(cooldownSecs / 60)}:${String(cooldownSecs % 60).padStart(2, '0')}`
+    : `${cooldownSecs}s`;
+  
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span class="key-level level-${tier}" style="font-size:11px;padding:4px 10px;">${tierConfig.name}</span>
+      ${onCooldown ? `<span class="tier-info warn">⏳ Cooldown: ${cooldownDisplay}</span>` : ''}
+    </div>
+    <div class="client-layout">
+      <div class="list-col">
+        <p class="list-label">Items disponíveis</p>
+        <div class="scroll-list">
+          ${items.map(item=>`
+            <div class="list-item${selectedItems.has(item.id)?' selected':''}" onclick="toggleItem(${item.id})">
+              <div class="item-check"><svg class="check-icon" viewBox="0 0 8 8" fill="none"><polyline points="1,4 3.5,6.5 7,2" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              ${item.name}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="right-col">
+        <div>
+          <div class="amount-label">Qtd. (max ${maxPerRequest})</div>
+          <input class="amount-input" type="number" id="amount-input" value="1" min="1" max="${maxPerRequest}" ${isInfinite?'disabled':''}/>
+        </div>
+        <div class="action-row">
+          <button class="btn-get${isRunning?' stop':''}" onclick="handleGet()" ${onCooldown&&!isRunning?'disabled':''}>${isRunning?'Stop':'Get'}</button>
+          <button class="btn-inf${isInfinite?' active':''}" onclick="handleInfinite()" ${!canInfinite?'disabled title="Apenas Premium"':''}>${canInfinite?'Infinite':'🔒'}</button>
+        </div>
+        <div class="selection-info">${selText}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderKeys() {
+  const keys = loadKeys();
+  const bound = loadBoundKeys();
+  return `
+    <div class="keys-header">
+      <span class="keys-title">🔑 Gerenciar Chaves</span>
+      <button class="btn-new-key" onclick="openNewKeyModal()">+ Nova chave</button>
+    </div>
+    <div class="keys-list">
+      ${keys.length===0?'<div class="empty-ban">Nenhuma chave criada.</div>':
+        keys.map(k=>{
+          const exp = k.permanent ? null : (k.expires ? new Date(k.expires) : null);
+          const expired = exp && exp < now();
+          const revoked = !!k.revokedAt;
+          const boundId = bound[k.code];
+          const dLeft = exp && !expired ? diffDays(exp, now()) : null;
+          const tier = k.tier || k.level;
+          const tierConfig = TIER_CONFIG[tier] || TIER_CONFIG.normal;
+          return `
+            <div class="key-card${expired||revoked?' expired':''}">
+              <div class="key-card-top">
+                <span class="key-code">${k.code}</span>
+                <div style="display:flex;gap:5px;align-items:center;">
+                  <span class="key-level level-${tier}">${tierConfig.name.toUpperCase()}</span>
+                  ${k.level==='admin'?'<span class="key-level level-admin">ADMIN</span>':''}
+                </div>
+              </div>
+              <div class="key-meta">
+                <span>📅 Criada: ${fmtDate(new Date(k.created))}</span>
+                <span>${k.permanent?'♾ Permanente': expired?'❌ Expirada':dLeft!==null?`⏳ ${dLeft}d restantes`:'—'}</span>
+                ${revoked?'<span style="color:var(--danger);font-weight:700;">⛔ Revogada</span>':''}
+              </div>
+              <div class="tier-info">
+                ${tierConfig.canInfinite?'✓ Infinite':'✕ Apenas Get'} · Max ${tierConfig.maxPerRequest}/pedido · ${tierConfig.cooldownMs>0?`Cooldown ${Math.floor(tierConfig.cooldownMs/60000)}:${String(Math.floor((tierConfig.cooldownMs%60000)/1000)).padStart(2,'0')}`:'Sem cooldown'}
+              </div>
+              <div class="key-bound ${boundId?'':'unbound'}">
+                ${boundId?`🔒 Vinculada: ID ${boundId}`:'🔓 Livre (não vinculada)'}
+              </div>
+              <div class="key-actions">
+                <button class="btn-copy-key" onclick="copyKey('${k.code}')">Copiar</button>
+                ${boundId?`<button class="btn-copy-key" onclick="unbindKey('${k.code}')" style="border-color:var(--warn);color:var(--warn);">Desvincular ID</button>`:''}
+                ${!revoked?`<button class="btn-revoke-key" onclick="revokeKeyByCode('${k.code}')">Revogar</button>`:'<button class="btn-copy-key" onclick="deleteKeyByCode(\''+k.code+'\')">Apagar</button>'}
+              </div>
+            </div>
+          `;
+        }).join('')}
+    </div>
+  `;
+}
+
+function renderBody() {
+  const map={admin:renderAdmin,client:renderClient,banlandia:renderBanlandia,keys:renderKeys};
+  document.getElementById('panel-body').innerHTML=(map[currentTab]||renderClient)();
+}
+
+// ── ACTIONS ──
+
+function toggleItem(id) { selectedItems.has(id)?selectedItems.delete(id):selectedItems.add(id); renderBody(); }
+
+function handleGet() {
+  if (isRunning) { clearInterval(infiniteInterval); isRunning=false; isInfinite=false; renderBody(); return; }
+  
+  const tier = sessionKey?.tier || sessionKey?.level || 'normal';
+  const tierConfig = TIER_CONFIG[tier] || TIER_CONFIG.normal;
+  
+  // Check cooldown
+  const usage = loadUsageTracking();
+  const userUsage = usage[MY_ROBLOX_ID] || { itemCounts: {}, lastUseTime: 0 };
+  const cooldownLeft = tierConfig.cooldownMs > 0 ? Math.max(0, (userUsage.lastUseTime + tierConfig.cooldownMs) - Date.now()) : 0;
+  
+  if (cooldownLeft > 0 && !isInfinite) {
+    renderBody();
+    return;
+  }
+  
+  const sel=[...selectedItems];
+  if (!sel.length) { renderBody(); return; }
+  const names=sel.map(id=>`"${items.find(i=>i.id===id)?.name}"`).join(', ');
+  
+  if (isInfinite) {
+    if (!tierConfig.canInfinite) {
+      isInfinite = false;
+      renderBody();
+      return;
+    }
+    isRunning=true; let c=0;
+    infiniteInterval=setInterval(()=>{ c++; renderBody(); },900);
+    renderBody();
+  } else {
+    let amt=parseInt(document.getElementById('amount-input')?.value||1);
+    
+    // Check max per request
+    if (amt > tierConfig.maxPerRequest) {
+      amt = tierConfig.maxPerRequest;
+    }
+    
+    // Check per-item limits (for semi-premium)
+    if (tierConfig.maxPerItem < 999) {
+      for (const itemId of sel) {
+        const itemCount = userUsage.itemCounts?.[itemId] || 0;
+        if (itemCount + amt > tierConfig.maxPerItem) {
+          const remaining = tierConfig.maxPerItem - itemCount;
+          if (remaining <= 0) {
+            renderBody();
+            return;
+          } else {
+            amt = Math.min(amt, remaining);
+          }
+        }
+      }
+      
+      // Update item counts
+      for (const itemId of sel) {
+        userUsage.itemCounts = userUsage.itemCounts || {};
+        userUsage.itemCounts[itemId] = (userUsage.itemCounts[itemId] || 0) + amt;
+      }
+    }
+    
+    // Update last use time for cooldown
+    userUsage.lastUseTime = Date.now();
+    usage[MY_ROBLOX_ID] = userUsage;
+    saveUsageTracking(usage);
+    
+    // Executa a acao de get
+    console.log(`[Chucro] Get: ${amt}x - ${names}`);
+    renderBody();
+  }
+}
+
+function handleInfinite() {
+  if (isRunning) return;
+  
+  const tier = sessionKey?.tier || sessionKey?.level || 'normal';
+  const tierConfig = TIER_CONFIG[tier] || TIER_CONFIG.normal;
+  
+  if (!tierConfig.canInfinite) {
+    // Visual feedback - shake e lock
+    const btn = document.querySelector('.btn-inf');
+    if (btn) {
+      btn.classList.add('btn-locked');
+      btn.innerHTML = '🔒';
+      setTimeout(() => {
+        btn.classList.remove('btn-locked');
+        btn.innerHTML = '🔒';
+      }, 800);
+    }
+    return;
+  }
+  
+  isInfinite = !isInfinite;
+  renderBody();
+}
+
+
+// ── KEY MANAGEMENT ──
+
+function openNewKeyModal() {
+  document.getElementById('newkey-code').value='';
+  document.getElementById('newkey-level').value='client';
+  document.getElementById('newkey-tier').value='normal';
+  document.getElementById('newkey-duration').value='30';
+  document.getElementById('newkey-result').style.display='none';
+  document.getElementById('newkey-btn').style.display='';
+  document.getElementById('newkey-btn').textContent='Gerar chave';
+  document.getElementById('modal-newkey').classList.add('open');
+}
+
+function genCode() {
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const seg=()=>Array.from({length:4},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+  return `${seg()}-${seg()}-${seg()}`;
+}
+
+function createKey() {
+  const codeInput = document.getElementById('newkey-code').value.trim().toUpperCase();
+  const level = document.getElementById('newkey-level').value;
+  const tier = level === 'admin' ? 'admin' : document.getElementById('newkey-tier').value;
+  const days = parseInt(document.getElementById('newkey-duration').value);
+  const code = codeInput || genCode();
+  const keys = loadKeys();
+
+  if (keys.find(k=>k.code.toLowerCase()===code.toLowerCase())) {
+    alert('Essa chave já existe! Escolha outro nome.'); return;
+  }
+
+  const permanent = days === 0;
+  const expires = permanent ? null : addDays(now(), days).toISOString();
+
+  keys.push({
+    code, level, tier, days, permanent,
+    created: now().toISOString(),
+    expires,
+    active: true,
+    revokedAt: null,
+    lastUsedBy: null,
+    lastUsedAt: null
+  });
+  saveKeys(keys);
+
+  document.getElementById('newkey-result-box').textContent = code;
+  document.getElementById('newkey-result').style.display='block';
+  document.getElementById('newkey-btn').style.display='none';
+  renderBody();
+}
+
+function copyGeneratedKey() {
+  const t = document.getElementById('newkey-result-box').textContent;
+  navigator.clipboard.writeText(t).then(()=>{
+    document.getElementById('newkey-result-box').textContent='✓ Copiado!';
+    setTimeout(()=>{ document.getElementById('newkey-result-box').textContent=t; },1200);
+  });
+}
+
+function copyKey(code) {
+  navigator.clipboard.writeText(code).then(()=>{ alert(`Chave "${code}" copiada!`); });
+}
+
+function revokeKeyByCode(code) {
+  if (!confirm(`Revogar a chave "${code}"? O usuário perderá acesso imediatamente.`)) return;
+  const keys=loadKeys();
+  const i=keys.findIndex(k=>k.code===code);
+  if (i>=0) { keys[i].revokedAt=now().toISOString(); saveKeys(keys); }
+  renderBody();
+}
+
+function deleteKeyByCode(code) {
+  if (!confirm(`Apagar a chave "${code}" permanentemente?`)) return;
+  const keys=loadKeys().filter(k=>k.code!==code);
+  saveKeys(keys);
+  const bound=loadBoundKeys();
+  delete bound[code];
+  saveBoundKeys(bound);
+  renderBody();
+}
+
+function unbindKey(code) {
+  if (!confirm(`Desvincular a chave "${code}" do ID atual? O próximo usuário a usar poderá reivindicá-la.`)) return;
+  const bound=loadBoundKeys();
+  delete bound[code];
+  saveBoundKeys(bound);
+  renderBody();
+}
+
+// ── DRAG ──
+const outer = document.getElementById('panel-outer');
+let dragging=false,ox=0,oy=0,px=0,py=0;
+outer.addEventListener('mousedown',e=>{
+  if (e.target.closest('button')||e.target.closest('.list-item')||e.target.closest('.user-card')||e.target.closest('select')||e.target.closest('textarea')||e.target.closest('input')) return;
+  dragging=true;outer.classList.add('dragging');ox=e.clientX-px;oy=e.clientY-py;e.preventDefault();
+});
+document.addEventListener('mousemove',e=>{ if(!dragging)return; px=e.clientX-ox;py=e.clientY-oy;outer.style.transform=`translate(${px}px,${py}px)`; });
+document.addEventListener('mouseup',()=>{ dragging=false;outer.classList.remove('dragging'); });
+document.addEventListener('keydown',e=>{ if(e.key==='F1'){ e.preventDefault();outer.classList.toggle('hidden'); }});
+</script>
+</body>
+</html>
